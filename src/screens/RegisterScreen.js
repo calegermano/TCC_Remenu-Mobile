@@ -1,6 +1,18 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useState } from 'react';
-import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity } from 'react-native';
+import { 
+    ActivityIndicator, 
+    Alert, 
+    ScrollView, 
+    StyleSheet, 
+    Text, 
+    TextInput, 
+    TouchableOpacity, 
+    View,
+    StatusBar,
+    KeyboardAvoidingView,
+    Platform
+} from 'react-native';
 import api from '../services/api';
 
 export default function RegisterScreen({ navigation }) {
@@ -21,17 +33,15 @@ export default function RegisterScreen({ navigation }) {
 
         setLoading(true);
         try {
-            // Envia para o Laravel (AuthController -> register)
             const response = await api.post('/register', {
                 nome: nome,
                 email: email,
                 senha: senha,
-                senha_confirmation: confirmarSenha // O Laravel exige este campo para validar 'confirmed'
+                senha_confirmation: confirmarSenha
             });
 
             const { token, user } = response.data;
 
-            // Salva e entra direto
             await AsyncStorage.setItem('@remenu_token', token);
             await AsyncStorage.setItem('@remenu_user', JSON.stringify(user));
 
@@ -48,31 +58,214 @@ export default function RegisterScreen({ navigation }) {
     }
 
     return (
-        <ScrollView contentContainerStyle={styles.container}>
-            <Text style={styles.title}>Crie sua conta</Text>
+        <View style={styles.container}>
+            <StatusBar barStyle="dark-content" backgroundColor="#F4F4F4" />
 
-            <TextInput style={styles.input} placeholder="Nome completo" value={nome} onChangeText={setNome} />
-            <TextInput style={styles.input} placeholder="E-mail" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" />
-            <TextInput style={styles.input} placeholder="Senha (mín 6 caracteres)" value={senha} onChangeText={setSenha} secureTextEntry />
-            <TextInput style={styles.input} placeholder="Confirmar Senha" value={confirmarSenha} onChangeText={setConfirmarSenha} secureTextEntry />
+            {/* Elemento Decorativo */}
+            <View style={styles.decorativeCircle} />
 
-            <TouchableOpacity style={styles.button} onPress={handleRegister} disabled={loading}>
-                {loading ? <ActivityIndicator color="#FFF" /> : <Text style={styles.buttonText}>Cadastrar</Text>}
-            </TouchableOpacity>
+            <KeyboardAvoidingView 
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                style={{ flex: 1 }}
+            >
+                <ScrollView 
+                    contentContainerStyle={styles.scrollContent}
+                    showsVerticalScrollIndicator={false}
+                >
+                    <View style={styles.header}>
+                        <Text style={styles.title}>CADASTRO<Text style={styles.dot}>.</Text></Text>
+                        <Text style={styles.subtitle}>Crie sua conta e comece a cozinhar.</Text>
+                    </View>
 
-            <TouchableOpacity onPress={() => navigation.navigate('Login')} style={styles.linkContainer}>
-                <Text style={styles.linkText}>Já tem conta? Faça Login</Text>
-            </TouchableOpacity>
-        </ScrollView>
+                    <View style={styles.form}>
+                        
+                        {/* INPUT NOME */}
+                        <View style={styles.inputContainer}>
+                            <Text style={styles.label}>NOME</Text>
+                            <TextInput 
+                                style={styles.input} 
+                                placeholder="Como você quer ser chamado?" 
+                                placeholderTextColor="#999"
+                                value={nome} 
+                                onChangeText={setNome} 
+                            />
+                        </View>
+
+                        {/* INPUT EMAIL */}
+                        <View style={styles.inputContainer}>
+                            <Text style={styles.label}>E-MAIL</Text>
+                            <TextInput 
+                                style={styles.input} 
+                                placeholder="seu@email.com" 
+                                placeholderTextColor="#999"
+                                value={email} 
+                                onChangeText={setEmail} 
+                                keyboardType="email-address" 
+                                autoCapitalize="none" 
+                            />
+                        </View>
+
+                        {/* INPUT SENHA */}
+                        <View style={styles.inputContainer}>
+                            <Text style={styles.label}>SENHA</Text>
+                            <TextInput 
+                                style={styles.input} 
+                                placeholder="Mínimo 8 caracteres" 
+                                placeholderTextColor="#999"
+                                value={senha} 
+                                onChangeText={setSenha} 
+                                secureTextEntry 
+                            />
+                        </View>
+
+                        {/* INPUT CONFIRMAR SENHA */}
+                        <View style={styles.inputContainer}>
+                            <Text style={styles.label}>CONFIRMAR SENHA</Text>
+                            <TextInput 
+                                style={styles.input} 
+                                placeholder="Digite a senha novamente" 
+                                placeholderTextColor="#999"
+                                value={confirmarSenha} 
+                                onChangeText={setConfirmarSenha} 
+                                secureTextEntry 
+                            />
+                        </View>
+
+                        {/* BOTÃO CADASTRAR */}
+                        <TouchableOpacity 
+                            style={styles.registerButton} 
+                            onPress={handleRegister} 
+                            disabled={loading}
+                            activeOpacity={0.8}
+                        >
+                            {loading ? (
+                                <ActivityIndicator color="#F4F4F4" /> 
+                            ) : (
+                                <Text style={styles.registerButtonText}>FINALIZAR CADASTRO</Text>
+                            )}
+                        </TouchableOpacity>
+
+                        {/* BOTÃO VOLTAR (Outline Style) */}
+                        <TouchableOpacity 
+                            onPress={() => navigation.navigate('Login')} 
+                            style={styles.backButton}
+                            activeOpacity={0.7}
+                        >
+                            <Text style={styles.backButtonText}>VOLTAR AO LOGIN</Text>
+                        </TouchableOpacity>
+
+                    </View>
+                </ScrollView>
+            </KeyboardAvoidingView>
+        </View>
     );
 }
 
 const styles = StyleSheet.create({
-    container: { flexGrow: 1, justifyContent: 'center', padding: 20, backgroundColor: '#fff' },
-    title: { fontSize: 28, fontWeight: 'bold', color: '#D9682B', marginBottom: 30, textAlign: 'center' },
-    input: { height: 50, borderColor: '#ddd', borderWidth: 1, borderRadius: 8, marginBottom: 15, paddingHorizontal: 15, fontSize: 16 },
-    button: { height: 50, backgroundColor: '#D9682B', borderRadius: 8, justifyContent: 'center', alignItems: 'center', marginTop: 10 },
-    buttonText: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
-    linkContainer: { marginTop: 20, alignItems: 'center' },
-    linkText: { color: '#666', fontSize: 16 }
+    container: { 
+        flex: 1, 
+        backgroundColor: '#F4F4F4', 
+        position: 'relative'
+    },
+    decorativeCircle: {
+        position: 'absolute',
+        top: -50,
+        right: -50,
+        width: 200,
+        height: 200,
+        borderRadius: 100,
+        backgroundColor: '#D9682B',
+        opacity: 0.1, 
+        transform: [{ scale: 1.5 }],
+    },
+    scrollContent: {
+        padding: 24,
+        paddingBottom: 40 // Espaço extra no final do scroll
+    },
+    header: {
+        marginTop: 40,
+        marginBottom: 30,
+    },
+    title: { 
+        fontSize: 38, // Um pouco menor que o Welcome para caber "CADASTRO"
+        fontWeight: '900', 
+        color: '#D9682B', 
+        letterSpacing: -1, 
+        marginBottom: 5,
+    },
+    dot: {
+        color: '#D9682B', 
+    },
+    subtitle: { 
+        fontSize: 16, 
+        color: '#636363', 
+        fontWeight: '400',
+    },
+    form: {
+        gap: 20, 
+    },
+    inputContainer: {
+        gap: 8,
+    },
+    label: {
+        fontSize: 12,
+        fontWeight: 'bold',
+        color: '#D9682B',
+        letterSpacing: 1,
+        textTransform: 'uppercase',
+        marginLeft: 4
+    },
+    input: { 
+        height: 56, 
+        backgroundColor: '#FFFFFF', 
+        borderRadius: 12, 
+        paddingHorizontal: 16, 
+        fontSize: 16,
+        color: '#333',
+        borderWidth: 1,
+        borderColor: '#E0E0E0', 
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 4,
+        elevation: 2,
+    },
+    // Botão Principal (Sólido)
+    registerButton: { 
+        height: 56, 
+        backgroundColor: '#D9682B', 
+        borderRadius: 12, 
+        justifyContent: 'center', 
+        alignItems: 'center',
+        marginTop: 10,
+        shadowColor: '#D9682B',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 10,
+        elevation: 8,
+    },
+    registerButtonText: { 
+        color: '#fff', 
+        fontSize: 16, 
+        fontWeight: 'bold', 
+        letterSpacing: 1,
+        textTransform: 'uppercase'
+    },
+    // Botão Secundário (Outline)
+    backButton: { 
+        height: 56, 
+        borderRadius: 12, 
+        justifyContent: 'center', 
+        alignItems: 'center',
+        backgroundColor: 'transparent', 
+        borderWidth: 1.5, 
+        borderColor: '#D9682B', 
+    },
+    backButtonText: { 
+        color: '#D9682B', 
+        fontSize: 16, 
+        fontWeight: 'bold',
+        letterSpacing: 1,
+        textTransform: 'uppercase'
+    }
 });
