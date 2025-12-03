@@ -1,25 +1,50 @@
 import api from './api';
 
+// Timeout utility
+const withTimeout = (promise, timeout = 10000) => {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Timeout')), timeout)
+    )
+  ]);
+};
+
 export const geladeiraService = {
+  // Alias para compatibilidade com componentes
+  async getIngredientes() {
+    return this.getGeladeira();
+  },
+
   // Listar ingredientes da geladeira
   async getGeladeira() {
     try {
-      console.log('Buscando geladeira...');
+      console.log('[Geladeira] Buscando ingredientes...');
       
-      const response = await api.get('/geladeira');
-      console.log('Geladeira carregada:', response.data);
+      const response = await withTimeout(api.get('/geladeira'));
+      console.log('[Geladeira] Carregado:', response.data.length, 'itens');
       
       return {
         success: true,
-        data: response.data
+        data: response.data || []
       };
     } catch (error) {
-      console.error('Erro ao carregar geladeira:', error);
+      console.error('[Geladeira] Erro:', error);
+      
+      let errorMessage = 'Erro ao carregar geladeira';
+      
+      if (error.message === 'Timeout') {
+        errorMessage = 'Tempo de conexão excedido. Verifique sua internet.';
+      } else if (error.response?.status === 401) {
+        errorMessage = 'Sessão expirada. Faça login novamente.';
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      }
       
       return {
         success: false,
-        error: error.response?.data?.message || 'Erro ao carregar geladeira',
-        data: {}
+        error: errorMessage,
+        data: [] // Sempre retornar array para evitar erros
       };
     }
   },
@@ -31,20 +56,21 @@ export const geladeiraService = {
         return { success: true, data: [] };
       }
       
-      console.log('Buscando ingredientes:', query);
+      console.log('[Search] Buscando:', query);
       
-      const response = await api.get(`/ingredientes/search?query=${query}`);
+      const response = await withTimeout(api.get(`/ingredientes/search?query=${encodeURIComponent(query)}`));
       
       return {
         success: true,
-        data: response.data
+        data: response.data || []
       };
     } catch (error) {
-      console.error('Erro na busca:', error);
+      console.error('[Search] Erro:', error);
       
+      // Em caso de erro na busca, retornar lista vazia
       return {
         success: false,
-        error: error.response?.data?.message || 'Erro na busca',
+        error: 'Erro na busca de ingredientes',
         data: []
       };
     }
@@ -53,23 +79,40 @@ export const geladeiraService = {
   // Adicionar ingrediente à geladeira
   async addIngrediente(ingredienteData) {
     try {
-      console.log('Adicionando ingrediente:', ingredienteData);
+      console.log('[Add] Adicionando:', ingredienteData);
       
-      const response = await api.post('/geladeira', ingredienteData);
+      // Validação básica
+      if (!ingredienteData?.ingrediente?.trim()) {
+        return {
+          success: false,
+          error: 'Nome do ingrediente é obrigatório'
+        };
+      }
       
-      console.log('Ingrediente adicionado:', response.data);
+      const response = await withTimeout(
+        api.post('/geladeira', {
+          ...ingredienteData,
+          ingrediente: ingredienteData.ingrediente.trim()
+        })
+      );
+      
+      console.log('[Add] Sucesso:', response.data);
       
       return {
         success: true,
         data: response.data
       };
     } catch (error) {
-      console.error('Erro ao adicionar:', error);
+      console.error('[Add] Erro:', error);
       
       let errorMessage = 'Erro ao adicionar ingrediente';
       
-      if (error.response?.status === 404) {
+      if (error.message === 'Timeout') {
+        errorMessage = 'Tempo de conexão excedido';
+      } else if (error.response?.status === 404) {
         errorMessage = 'Ingrediente não encontrado. Use o autocomplete.';
+      } else if (error.response?.status === 409) {
+        errorMessage = 'Este ingrediente já está na geladeira';
       } else if (error.response?.data?.message) {
         errorMessage = error.response.data.message;
       }
@@ -84,22 +127,30 @@ export const geladeiraService = {
   // Atualizar ingrediente
   async updateIngrediente(id, updateData) {
     try {
-      console.log('Atualizando ingrediente:', { id, ...updateData });
+      console.log('[Update] Atualizando:', { id, ...updateData });
       
-      const response = await api.put(`/geladeira/${id}`, updateData);
+      const response = await withTimeout(api.put(`/geladeira/${id}`, updateData));
       
-      console.log('Ingrediente atualizado:', response.data);
+      console.log('[Update] Sucesso:', response.data);
       
       return {
         success: true,
         data: response.data
       };
     } catch (error) {
-      console.error('Erro ao atualizar:', error);
+      console.error('[Update] Erro:', error);
+      
+      let errorMessage = 'Erro ao atualizar ingrediente';
+      
+      if (error.response?.status === 404) {
+        errorMessage = 'Ingrediente não encontrado na geladeira';
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      }
       
       return {
         success: false,
-        error: error.response?.data?.message || 'Erro ao atualizar ingrediente'
+        error: errorMessage
       };
     }
   },
@@ -107,48 +158,93 @@ export const geladeiraService = {
   // Remover ingrediente
   async removeIngrediente(id) {
     try {
-      console.log('Removendo ingrediente:', id);
+      console.log('[Delete] Removendo:', id);
       
-      const response = await api.delete(`/geladeira/${id}`);
+      const response = await withTimeout(api.delete(`/geladeira/${id}`));
       
-      console.log('Ingrediente removido:', response.data);
+      console.log('[Delete] Sucesso:', response.data);
       
       return {
         success: true,
         data: response.data
       };
     } catch (error) {
-      console.error('Erro ao remover:', error);
+      console.error('[Delete] Erro:', error);
+      
+      let errorMessage = 'Erro ao remover ingrediente';
+      
+      if (error.response?.status === 404) {
+        errorMessage = 'Ingrediente não encontrado na geladeira';
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      }
       
       return {
         success: false,
-        error: error.response?.data?.message || 'Erro ao remover ingrediente'
+        error: errorMessage
       };
     }
   },
 
-  // Lista de ingredientes básicos (pode vir da API ou ser local)
+  // Lista de ingredientes básicos (com categorias)
   getIngredientesBasicos() {
     return [
-      "Arroz branco", "Feijão carioca", "Feijão preto", "Macarrão", 
-      "Óleo de soja", "Azeite de oliva", "Sal", "Açúcar", "Café", 
-      "Leite integral", "Ovos", "Manteiga", "Farinha de trigo", 
-      "Cebola", "Alho", "Tomate", "Batata inglesa", "Cenoura", 
-      "Alface", "Limão", "Banana prata", "Maçã", "Pão francês"
+      { nome: "Leite", categoria: "laticinios", icon: "local-drink" },
+      { nome: "Ovos", categoria: "ovos", icon: "egg" },
+      { nome: "Pão francês", categoria: "paes", icon: "bakery-dining" },
+      { nome: "Arroz", categoria: "graos", icon: "rice-bowl" },
+      { nome: "Feijão", categoria: "graos", icon: "restaurant" },
+      { nome: "Café", categoria: "bebidas", icon: "coffee" },
+      { nome: "Açúcar", categoria: "temperos", icon: "sugar" },
+      { nome: "Sal", categoria: "temperos", icon: "seasoning" },
+      { nome: "Óleo", categoria: "temperos", icon: "oil" },
+      { nome: "Cebola", categoria: "hortifruti", icon: "emoji-food-beverage" },
+      { nome: "Alho", categoria: "hortifruti", icon: "garlic" },
+      { nome: "Tomate", categoria: "hortifruti", icon: "grocery" },
+      { nome: "Batata", categoria: "hortifruti", icon: "potatoes" },
+      { nome: "Banana", categoria: "hortifruti", icon: "apple" },
+      { nome: "Maçã", categoria: "hortifruti", icon: "apple" },
     ];
   },
 
-  // Listar categorias (se sua API tiver)
+  // Listar categorias
   async getCategorias() {
     try {
-      const response = await api.get('/categorias');
+      const response = await withTimeout(api.get('/categorias'));
+      return {
+        success: true,
+        data: response.data || []
+      };
+    } catch (error) {
+      console.error('[Categorias] Erro:', error);
+      
+      // Fallback: categorias padrão
+      const defaultCategorias = [
+        "Laticínios", "Ovos", "Carnes", "Peixes", "Frutas", 
+        "Verduras", "Grãos", "Temperos", "Bebidas", "Outros"
+      ];
+      
+      return { 
+        success: false, 
+        data: defaultCategorias 
+      };
+    }
+  },
+
+  // Estatísticas da geladeira
+  async getEstatisticas() {
+    try {
+      const response = await withTimeout(api.get('/geladeira/estatisticas'));
       return {
         success: true,
         data: response.data
       };
     } catch (error) {
-      console.error('Erro ao buscar categorias:', error);
-      return { success: false, data: [] };
+      console.error('[Estatisticas] Erro:', error);
+      return {
+        success: false,
+        data: null
+      };
     }
   }
 };

@@ -38,7 +38,7 @@ const IngredienteItem = ({ item, onEdit, onDelete }) => {
         icon: 'warning',
         urgency: 'high'
       };
-    } else if (diffDays <= 3) {
+    } else if (diffDays <= 1) {
       return { 
         label: `AMANHÃ`, 
         color: '#ffc107', 

@@ -1,7 +1,7 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { geladeiraService } from '../services/geladeiraService';
+import { geladeiraService } from '../../services/geladeiraService';
 
 const AutoCompleteInput = ({ onSelect, placeholder, value, onChangeText }) => {
   const [suggestions, setSuggestions] = useState([]);
@@ -76,7 +76,6 @@ const AutoCompleteInput = ({ onSelect, placeholder, value, onChangeText }) => {
             renderItem={renderSuggestion}
             keyExtractor={(item) => item.id.toString()}
             keyboardShouldPersistTaps="always"
-            nestedScrollEnabled
           />
         </View>
       )}

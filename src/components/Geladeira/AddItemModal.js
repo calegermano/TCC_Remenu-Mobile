@@ -1,9 +1,9 @@
 import { Feather, MaterialIcons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useState } from 'react';
-import { Alert, Modal, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { geladeiraService } from '../../services/geladeiraService';
-import AutoCompleteInput from '../AutoCompleteInput';
+import AutoCompleteInput from './AutoCompleteInput';
 
 const AddItemModal = ({ visible, onClose, onSuccess }) => {
   const [ingrediente, setIngrediente] = useState('');
@@ -178,8 +178,7 @@ const AddItemModal = ({ visible, onClose, onSuccess }) => {
   );
 };
 
-// Adicione TextInput aqui no mesmo arquivo
-import { TextInput } from 'react-native';
+// import { TextInput } from 'react-native';
 
 const styles = StyleSheet.create({
   modalOverlay: {
