@@ -5,7 +5,7 @@ import axios from 'axios';
 //ip Fábio: 200.53.197.187
 //lembrem que o ip pode mudar ent caso nao funcione digite no cmd o seguinte comando curl https://api.ipify.org
 const api = axios.create({
-    baseURL: 'http://xxx.xxx.xxx:8000/api', 
+    baseURL: 'http://192.168.15.104:8000/api', 
     headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',

@@ -1,12 +1,12 @@
 import { Tabs } from 'expo-router';
-import { MaterialIcons, Feather } from '@expo/vector-icons';
+import { MaterialIcons, Feather, Ionicons } from '@expo/vector-icons';
 import { Platform } from 'react-native';
 
 export default function TabsLayout() {
   return (
     <Tabs
       screenOptions={{
-        headerShown: false, // Esconde o header padrão
+        headerShown: false,
         tabBarStyle: {
           backgroundColor: '#ffffff',
           borderTopColor: '#e5e5e5',
@@ -19,8 +19,8 @@ export default function TabsLayout() {
           shadowRadius: 8,
           elevation: 5,
         },
-        tabBarActiveTintColor: '#4a6fa5', // Cor do ícone ativo
-        tabBarInactiveTintColor: '#666666', // Cor do ícone inativo
+        tabBarActiveTintColor: '#4a6fa5',
+        tabBarInactiveTintColor: '#666666',
         tabBarLabelStyle: {
           fontSize: 11,
           fontWeight: '500',
@@ -31,7 +31,7 @@ export default function TabsLayout() {
         },
       }}
     >
-      {/* Tab Home */}
+      {/* 1. INÍCIO */}
       <Tabs.Screen
         name="index"
         options={{
@@ -46,7 +46,7 @@ export default function TabsLayout() {
         }}
       />
 
-      {/* Tab Receitas */}
+      {/* 2. RECEITAS */}
       <Tabs.Screen
         name="receitas"
         options={{
@@ -61,14 +61,14 @@ export default function TabsLayout() {
         }}
       />
 
-      {/* Tab Geladeira */}
+      {/* 3. FAVORITOS */}
       <Tabs.Screen
-        name="geladeira"
+        name="favoritos"
         options={{
-          title: 'Geladeira',
+          title: 'Favoritos',
           tabBarIcon: ({ color, size, focused }) => (
             <MaterialIcons 
-              name={focused ? "kitchen" : "kitchen"} 
+              name={focused ? "favorite" : "favorite-border"} 
               size={size} 
               color={color} 
             />
@@ -76,7 +76,7 @@ export default function TabsLayout() {
         }}
       />
 
-      {/* Tab Planejamento */}
+      {/* 4. PLANEJAMENTO */}
       <Tabs.Screen
         name="planejamento"
         options={{
@@ -91,14 +91,14 @@ export default function TabsLayout() {
         }}
       />
 
-      {/* Tab Perfil */}
+      {/* 5. GELADEIRA */}
       <Tabs.Screen
-        name="perfil"
+        name="geladeira"
         options={{
-          title: 'Perfil',
+          title: 'Geladeira',
           tabBarIcon: ({ color, size, focused }) => (
             <MaterialIcons 
-              name={focused ? "person" : "person-outline"} 
+              name={focused ? "kitchen" : "kitchen"} 
               size={size} 
               color={color} 
             />

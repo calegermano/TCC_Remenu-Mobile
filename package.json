@@ -1,6 +1,6 @@
 {
   "name": "tcc_remenu-mobile",
-  "main": "expo-router/entry",
+  "main": "node_modules/expo/AppEntry.js",
   "version": "1.0.0",
   "scripts": {
     "start": "expo start",
@@ -16,7 +16,7 @@
     "@react-navigation/bottom-tabs": "^7.4.0",
     "@react-navigation/elements": "^2.6.3",
     "@react-navigation/native": "^7.1.22",
-    "@react-navigation/stack": "^7.6.8",
+    "@react-navigation/stack": "^7.6.9",
     "axios": "^1.13.2",
     "expo": "~54.0.25",
     "expo-constants": "~18.0.10",
