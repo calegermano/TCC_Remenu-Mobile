@@ -12,7 +12,7 @@ import RecipesScreen from './src/screens/RecipesScreen';
 import RegisterScreen from './src/screens/RegisterScreen';
 import WelcomeScreen from './src/screens/WelcomeScreen';
 
-// Importe o Tab Navigator
+// Importe o Tab Navigator e o Header Customizado
 import MainTabNavigator from './src/navigation/MainTabNavigator';
 
 const Stack = createStackNavigator();
@@ -23,32 +23,35 @@ export default function App() {
       <NavigationContainer>
         <Stack.Navigator initialRouteName="Welcome">
           
+          {/* --- TELAS DE AUTENTICAÇÃO (Sem Header) --- */}
+          
           <Stack.Screen 
             name="Welcome" 
             component={WelcomeScreen} 
             options={{ headerShown: false }} 
           />
 
-          {/* Fluxo de Autenticação */}
+
           <Stack.Screen 
             name="Login" 
             component={LoginScreen} 
-            options={{ title: 'Entrar', headerTintColor: '#D9682B' }} 
+            options={{ headerShown: false }} // Removemos o título padrão
           />
           
           <Stack.Screen 
-          name="Register" 
-          component={RegisterScreen} 
-          options={{ title: 'Criar Conta', headerTintColor: '#D9682B' }} 
+            name="Register" 
+            component={RegisterScreen} 
+            options={{ headerShown: false }} // Removemos o título padrão
           />
 
           <Stack.Screen 
-          name="ForgotPassword" 
-          component={ForgotPasswordScreen} 
-          options={{ title: 'Recuperar Senha', headerTintColor: '#D9682B' }} 
+            name="ForgotPassword" 
+            component={ForgotPasswordScreen} 
+            options={{ headerShown: false }} // Removemos o título padrão
           />
 
-          {/* Área Logada - Agora com Tab Navigation */}
+          {/* --- ÁREA LOGADA (Com CustomHeader) --- */}
+          
           <Stack.Screen 
             name="Home" 
             component={MainTabNavigator} 
