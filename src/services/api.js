@@ -6,7 +6,7 @@ import axios from 'axios';
 //ip Rapha: 192.168.0.137
 //lembrem que o ip pode mudar ent caso nao funcione digite no cmd o seguinte comando ipconfig
 const api = axios.create({
-    baseURL: 'http://192.168.15.104:8000/api', 
+    baseURL: 'http://200.53.197.187:8000/api', 
     headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
