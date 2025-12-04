@@ -1,14 +1,13 @@
 // src/navigation/MainTabNavigator.js
-import React from 'react';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
 // Importando as telas
-import HomeScreen from '../screens/HomeScreen';
-import RecipesScreen from '../screens/RecipesScreen';
 import FavoritesScreen from '../screens/FavoritesScreen';
-import PlanningScreen from '../screens/PlanningScreen';
 import FridgeScreen from '../screens/FridgeScreen';
+import HomeScreen from '../screens/HomeScreen';
+import PlanningScreen from '../screens/PlanningScreen';
+import RecipesScreen from '../screens/RecipesScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -28,7 +27,7 @@ function MainTabNavigator() {
           } else if (route.name === 'Planejamento') {
             iconName = focused ? 'calendar' : 'calendar-outline';
           } else if (route.name === 'Geladeira') {
-            iconName = focused ? 'kitchen' : 'kitchen';
+            iconName = focused ? 'fridge' : 'fridge';
           }
 
           return <Ionicons name={iconName} size={size} color={color} />;

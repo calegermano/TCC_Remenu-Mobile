@@ -109,45 +109,86 @@ export default function RecipesScreen({ navigation }) {
         }
     }
 
+    // Função para favoritar/desfavoritar
+    async function toggleFavorite(recipe) {
+        try {
+            const token = await AsyncStorage.getItem('@remenu_token');
+            
+            // Atualiza visualmente na hora (Otimista)
+            const newRecipes = recipes.map(r => {
+                if (r.recipe_id === recipe.recipe_id) {
+                    return { ...r, is_favorite: !r.is_favorite };
+                }
+                return r;
+            });
+            setRecipes(newRecipes);
+
+            // Envia para o Backend
+            await api.post('/favoritos/toggle', {
+                recipe_id: recipe.recipe_id,
+                name: recipe.recipe_name,
+                image: recipe.recipe_image,
+                calories: recipe.recipe_nutrition?.calories
+            }, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
+        } catch (error) {
+            console.log(error);
+            Alert.alert('Erro', 'Não foi possível favoritar.');
+            // Se der erro, reverte a lista (opcional)
+        }
+    }
+
     // Renderiza cada Card
     const renderItem = ({ item }) => {
-      // CÁLCULO DO TEMPO TOTAL (Igual ao Web)
-      const prep = parseInt(item.preparation_time_min) || 0;
-      const cook = parseInt(item.cooking_time_min) || 0;
-      const totalTime = prep + cook;
-      return (
-          <TouchableOpacity 
-              style={styles.card} 
-              onPress={() => navigation.navigate('RecipeDetails', { id: item.recipe_id })}
-          >
-              <Image 
-                  source={
-                      item.recipe_image 
-                      ? { uri: item.recipe_image } 
-                      : require('../assets/semImagem.jpeg') 
-                  }
-                  style={styles.cardImage} 
-                  resizeMode="cover"
-              />
-              <View style={styles.cardContent}>
-                  <Text style={styles.cardTitle} numberOfLines={2}>{item.recipe_name}</Text>
-                  <View style={styles.cardFooter}>
-                      <Text style={styles.cardInfo}>
-                          <Ionicons name="flame-outline" size={14} color="#D9682B" /> {item.recipe_nutrition?.calories || 'N/A'} kcal
-                      </Text>
-                      
-                      {/* MOSTRA O TEMPO TOTAL SOMADO */}
-                      {totalTime > 0 && (
-                          <Text style={styles.cardInfo}>
-                              <Ionicons name="time-outline" size={14} color="#666" /> {totalTime} min
-                          </Text>
-                      )}
-                  </View>
-              </View>
-          </TouchableOpacity>
-      );
-    };
+        const prep = parseInt(item.preparation_time_min) || 0;
+        const cook = parseInt(item.cooking_time_min) || 0;
+        const totalTime = prep + cook;
 
+        return (
+            <TouchableOpacity 
+                style={styles.card} 
+                onPress={() => navigation.navigate('RecipeDetails', { id: item.recipe_id })}
+            >
+                {/* BOTÃO DE FAVORITO (Coração) */}
+                <TouchableOpacity 
+                    style={styles.favButton} 
+                    onPress={() => toggleFavorite(item)}
+                >
+                    <Ionicons 
+                        name={item.is_favorite ? "heart" : "heart-outline"} 
+                        size={24} 
+                        color={item.is_favorite ? "#e74c3c" : "#666"} 
+                    />
+                </TouchableOpacity>
+
+                <Image 
+                    source={
+                        item.recipe_image 
+                        ? { uri: item.recipe_image } 
+                        : require('../assets/semImagem.jpeg') 
+                    }
+                    style={styles.cardImage} 
+                    resizeMode="cover"
+                />
+                <View style={styles.cardContent}>
+                    <Text style={styles.cardTitle} numberOfLines={2}>{item.recipe_name}</Text>
+                    <View style={styles.cardFooter}>
+                        <Text style={styles.cardInfo}>
+                            <Ionicons name="flame-outline" size={14} color="#D9682B" /> {item.recipe_nutrition?.calories || 'N/A'} kcal
+                        </Text>
+                        {totalTime > 0 && (
+                            <Text style={styles.cardInfo}>
+                                <Ionicons name="time-outline" size={14} color="#666" /> {totalTime} min
+                            </Text>
+                        )}
+                    </View>
+                </View>
+            </TouchableOpacity>
+        );
+    };
+    
     return (
         <View style={styles.container}>
             
@@ -292,5 +333,16 @@ const styles = StyleSheet.create({
     smallInput: { flex: 1, borderWidth: 1, borderColor: '#ddd', borderRadius: 8, padding: 10, textAlign: 'center' },
     
     applyButton: { backgroundColor: '#D9682B', padding: 15, borderRadius: 10, alignItems: 'center', marginTop: 20 },
-    applyButtonText: { color: '#fff', fontWeight: 'bold', fontSize: 16 }
+    applyButtonText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
+
+    favButton: {
+        position: 'absolute',
+        top: 10,
+        right: 10,
+        zIndex: 10,
+        backgroundColor: 'rgba(255,255,255,0.9)',
+        borderRadius: 20,
+        padding: 6,
+        elevation: 5
+    },
 });

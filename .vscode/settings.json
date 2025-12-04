@@ -3,5 +3,7 @@
     "source.fixAll": "explicit",
     "source.organizeImports": "explicit",
     "source.sortMembers": "explicit"
-  }
+  },
+  "javascript.suggest.autoImports": false,
+  "typescript.suggest.autoImports": false
 }
