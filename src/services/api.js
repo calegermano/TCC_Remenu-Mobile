@@ -1,16 +1,31 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 
-//colocar seu ip nesta baseURL para o funcionamento da api e ligar o site laravel pelo php artisan serve
-//ip Carlos: 192.168.15.104
-//ip Fábio: 200.53.197.187
-//ip Rapha: 192.168.0.137
-//lembrem que o ip pode mudar ent caso nao funcione digite no cmd o seguinte comando ipconfig
+// Verifique se o IP está correto!
 const api = axios.create({
     baseURL: 'http://192.168.15.104:8000/api', 
     headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
     }
+});
+
+// --- O SEGREDO ESTÁ AQUI ---
+// Antes de cada requisição, esse código roda para injetar o Token
+api.interceptors.request.use(async (config) => {
+    try {
+        const token = await AsyncStorage.getItem('@remenu_token');
+        
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+            console.log("✅ Token enviado na requisição:", config.url);
+        } else {
+            console.log("⚠️ Nenhum token encontrado no AsyncStorage");
+        }
+    } catch (error) {
+        console.error("Erro ao pegar token", error);
+    }
+    return config;
 });
 
 export default api;

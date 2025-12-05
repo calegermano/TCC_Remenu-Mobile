@@ -7,6 +7,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 // Importe todas as telas
 import FavoritesScreen from './src/screens/FavoritesScreen';
 import ForgotPasswordScreen from './src/screens/ForgotPasswordScreen';
+import FridgeScreen from './src/screens/FridgeScreen';
 import LoginScreen from './src/screens/LoginScreen';
 import PlanningScreen from './src/screens/PlanningScreen';
 import RecipeDetailsScreen from './src/screens/RecipeDetailsScreen';
@@ -89,6 +90,13 @@ export default function App() {
             component={PlanningScreen} 
             options={{ title: 'Planejamento', headerTintColor: '#D9682B' }} 
           />
+
+          <Stack.Screen 
+            name="Fridge" 
+            component={FridgeScreen} 
+            options={{ title: 'Minha Geladeira', headerTintColor: '#D9682B' }} 
+          />
+
         </Stack.Navigator>
       </NavigationContainer>
     </GestureHandlerRootView>

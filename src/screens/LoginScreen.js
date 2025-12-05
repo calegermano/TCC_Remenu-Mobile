@@ -1,16 +1,16 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useState } from 'react';
-import { 
-    ActivityIndicator, 
-    Alert, 
-    StyleSheet, 
-    Text, 
-    TextInput, 
-    TouchableOpacity, 
-    View, 
-    StatusBar, 
-    KeyboardAvoidingView, 
-    Platform 
+import {
+    ActivityIndicator,
+    Alert,
+    KeyboardAvoidingView,
+    Platform,
+    StatusBar,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View
 } from 'react-native';
 import api from '../services/api';
 
@@ -24,15 +24,36 @@ export default function LoginScreen({ navigation }) {
 
         setLoading(true);
         try {
+            console.log("Tentando login com:", email); // Log 1
             const response = await api.post('/login', { email, senha });
-            const { token, user } = response.data;
+            
+            // Log para ver o que o Laravel respondeu
+            console.log("RESPOSTA DO LARAVEL:", response.data); 
 
+            // Adapte aqui conforme o que aparecer no console. 
+            // O padrão do Laravel Sanctum geralmente retorna 'token' ou 'access_token'
+            const token = response.data.token || response.data.access_token;
+            const user = response.data.user;
+
+            if (!token) {
+                Alert.alert("Erro", "O servidor não retornou um token válido.");
+                return;
+            }
+
+            // Salvando com a mesma chave que o api.js busca (@remenu_token)
             await AsyncStorage.setItem('@remenu_token', token);
             await AsyncStorage.setItem('@remenu_user', JSON.stringify(user));
 
-            navigation.replace('Home'); 
+            console.log("✅ Token salvo no celular:", token);
+
+            // Reseta a navegação para ir para a Home/Fridge
+            navigation.reset({
+                index: 0,
+                routes: [{ name: 'Home' }], // Certifique-se que o nome da rota no App.js é 'Home'
+            });
+
         } catch (error) {
-            console.log(error);
+            console.log("Erro no Login:", error.response ? error.response.data : error);
             Alert.alert('Erro', 'Login falhou. Verifique e-mail e senha.');
         } finally {
             setLoading(false);
@@ -103,7 +124,7 @@ export default function LoginScreen({ navigation }) {
                     <TouchableOpacity 
                         style={styles.backButton}
                         activeOpacity={0.7}
-                        onPress={() => navigation.goBack()}
+                        onPress={() => navigation.navigate('Welcome')}
                     >
                         <Text style={styles.backText}>VOLTAR</Text>
                     </TouchableOpacity>

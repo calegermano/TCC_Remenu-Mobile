@@ -1,335 +1,406 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, FlatList, TouchableOpacity, RefreshControl, Alert, ActivityIndicator } from 'react-native';
-import { MaterialIcons, Feather } from '@expo/vector-icons';
-import { geladeiraService } from '../services/geladeiraService';
+import { Ionicons } from '@expo/vector-icons';
+import { useCallback, useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  Modal,
+  ScrollView,
+  SectionList,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
+} from 'react-native';
+import api from '../services/api'; // Importando seu api.js corrigido
 
-// Componentes
-import BannerSection from '../components/Geladeira/BannerSection';
-import SearchFilter from '../components/Geladeira/SearchFilter';
-import IngredienteItem from '../components/Geladeira/IngredienteItem';
-import QuickAddCard from '../components/Geladeira/QuickAddCard';
-import TipsCard from '../components/Geladeira/TipsCard';
-import EmptyState from '../components/Geladeira/EmptyState';
-import AddItemModal from '../components/Geladeira/AddItemModal';
-import EditItemModal from '../components/Geladeira/EditItemModal';
+const BASIC_INGREDIENTS = [
+    "Arroz branco", "Feijão carioca", "Feijão preto", "Macarrão", 
+    "Óleo", "Sal", "Açúcar", "Café", "Leite", "Ovos", "Manteiga", 
+    "Cebola", "Alho", "Tomate", "Batata", "Cenoura", "Alface"
+];
 
 export default function FridgeScreen() {
-  // Estados
-  const [ingredientes, setIngredientes] = useState([]);
-  const [filteredIngredientes, setFilteredIngredientes] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [searchText, setSearchText] = useState('');
-  const [filters, setFilters] = useState({
-    categoria: 'all',
-    sortBy: 'name',
-    showExpired: true,
-    showFresh: true,
-  });
-  
-  // Modais
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [selectedItem, setSelectedItem] = useState(null);
+    // --- ESTADOS ---
+    const [fridgeData, setFridgeData] = useState([]);
+    const [loading, setLoading] = useState(false);
+    
+    // Inputs Adicionar
+    const [searchQuery, setSearchQuery] = useState('');
+    const [quantity, setQuantity] = useState('');
+    const [validade, setValidade] = useState(''); // Formato YYYY-MM-DD
+    
+    // Autocomplete
+    const [suggestions, setSuggestions] = useState([]);
+    const [showSuggestions, setShowSuggestions] = useState(false);
 
-  // Carregar dados
-  const carregarIngredientes = useCallback(async () => {
-    try {
-      const result = await geladeiraService.getIngredientes();
-      if (result.success) {
-        setIngredientes(result.data);
-        aplicarFiltros(result.data, searchText, filters);
-      } else {
-        Alert.alert('Erro', 'Não foi possível carregar os ingredientes');
-      }
-    } catch (error) {
-      console.error('Erro ao carregar:', error);
-      Alert.alert('Erro', 'Falha na conexão');
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, [searchText, filters]);
+    // Modal Editar
+    const [modalVisible, setModalVisible] = useState(false);
+    const [editItem, setEditItem] = useState(null);
+    const [editQtd, setEditQtd] = useState('');
+    const [editVal, setEditVal] = useState('');
 
-  // Carregar inicial
-  useEffect(() => {
-    carregarIngredientes();
-  }, []);
+    // --- 1. CARREGAR DADOS ---
+    const fetchFridge = useCallback(async () => {
+        setLoading(true);
+        try {
+            const response = await api.get('/geladeira');
+            const data = response.data;
 
-  // Aplicar filtros e busca
-  const aplicarFiltros = (data, search, filterOptions) => {
-    let filtered = [...data];
+            // Transforma Objeto Laravel {'Cat': [itens]} em Array React Native [{title: 'Cat', data: [itens]}]
+            const sections = Object.keys(data).map(key => ({
+                title: key,
+                data: data[key]
+            }));
 
-    // Filtro de busca
-    if (search) {
-      filtered = filtered.filter(item =>
-        item.ingrediente.toLowerCase().includes(search.toLowerCase())
-      );
-    }
-
-    // Filtro de categoria
-    if (filterOptions.categoria !== 'all') {
-      filtered = filtered.filter(item =>
-        item.categoria === filterOptions.categoria
-      );
-    }
-
-    // Filtro de validade
-    if (!filterOptions.showExpired || !filterOptions.showFresh) {
-      const hoje = new Date();
-      hoje.setHours(0, 0, 0, 0);
-
-      filtered = filtered.filter(item => {
-        if (!item.validade) return true;
-        
-        const dataValidade = new Date(item.validade);
-        dataValidade.setHours(0, 0, 0, 0);
-        const diffTime = dataValidade - hoje;
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        
-        const isExpired = diffDays < 0;
-        
-        if (!filterOptions.showExpired && isExpired) return false;
-        if (!filterOptions.showFresh && !isExpired) return true;
-        return true;
-      });
-    }
-
-    // Ordenação
-    filtered.sort((a, b) => {
-      switch (filterOptions.sortBy) {
-        case 'date':
-          if (!a.validade && !b.validade) return 0;
-          if (!a.validade) return 1;
-          if (!b.validade) return -1;
-          return new Date(a.validade) - new Date(b.validade);
-        
-        case 'quantity':
-          return b.quantidade - a.quantidade;
-        
-        default: // 'name'
-          return a.ingrediente.localeCompare(b.ingrediente);
-      }
-    });
-
-    setFilteredIngredientes(filtered);
-  };
-
-  // Handlers
-  const handleSearch = (text) => {
-    setSearchText(text);
-    aplicarFiltros(ingredientes, text, filters);
-  };
-
-  const handleFilter = (newFilters) => {
-    setFilters(newFilters);
-    aplicarFiltros(ingredientes, searchText, newFilters);
-  };
-
-  const handleRefresh = () => {
-    setRefreshing(true);
-    carregarIngredientes();
-  };
-
-  const handleEdit = (item) => {
-    setSelectedItem(item);
-    setShowEditModal(true);
-  };
-
-  const handleDelete = (item) => {
-    Alert.alert(
-      'Remover Ingrediente',
-      `Deseja remover "${item.ingrediente}" da geladeira?`,
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Remover',
-          style: 'destructive',
-          onPress: async () => {
-            const result = await geladeiraService.removeIngrediente(item.id);
-            if (result.success) {
-              carregarIngredientes();
-              Alert.alert('Sucesso!', 'Ingrediente removido');
+            setFridgeData(sections);
+        } catch (error) {
+            console.error(error);
+            // Se der 401 aqui, o interceptor do api.js ou o Login falharam
+            if (error.response?.status === 401) {
+                Alert.alert("Sessão Expirada", "Por favor, faça login novamente.");
             } else {
-              Alert.alert('Erro', 'Não foi possível remover');
+                Alert.alert("Erro", "Não foi possível carregar a geladeira.");
             }
-          },
-        },
-      ]
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchFridge();
+    }, [fetchFridge]);
+
+    // --- 2. AUTOCOMPLETE ---
+    const handleSearchInput = async (text) => {
+        setSearchQuery(text);
+        if (text.length < 2) {
+            setSuggestions([]);
+            setShowSuggestions(false);
+            return;
+        }
+        try {
+            const res = await api.get(`/ingredientes/search?query=${text}`);
+            setSuggestions(res.data);
+            setShowSuggestions(true);
+        } catch (error) {
+            console.log("Erro autocomplete", error);
+        }
+    };
+
+    const selectSuggestion = (name) => {
+        setSearchQuery(name);
+        setShowSuggestions(false);
+        setSuggestions([]);
+    };
+
+    // --- 3. ADICIONAR ITEM ---
+    const handleAddItem = async (nameOverride = null) => {
+        const nome = nameOverride || searchQuery;
+        const qtd = quantity || '1';
+
+        if (!nome) return Alert.alert("Atenção", "Informe um ingrediente.");
+
+        try {
+            await api.post('/geladeira', {
+                ingrediente: nome,
+                quantidade: parseInt(qtd),
+                validade: validade || null
+            });
+            
+            // Limpar
+            setSearchQuery('');
+            setQuantity('');
+            setValidade('');
+            Alert.alert("Sucesso", "Item adicionado!");
+            fetchFridge(); // Recarregar lista
+        } catch (error) {
+            const msg = error.response?.data?.erro || "Erro ao adicionar.";
+            Alert.alert("Erro", msg);
+        }
+    };
+
+    // --- 4. DELETAR ITEM ---
+    const handleDelete = (id) => {
+        Alert.alert("Remover", "Tem certeza?", [
+            { text: "Cancelar" },
+            { 
+                text: "Sim", onPress: async () => {
+                    try {
+                        await api.delete(`/geladeira/${id}`);
+                        fetchFridge();
+                    } catch (e) { Alert.alert("Erro", "Falha ao remover."); }
+                }
+            }
+        ]);
+    };
+
+    // --- 5. EDITAR ITEM (MODAL) ---
+    const openEdit = (item) => {
+        setEditItem(item);
+        setEditQtd(String(item.quantidade));
+        setEditVal(item.validade || '');
+        setModalVisible(true);
+    };
+
+    const saveEdit = async () => {
+        if (!editItem) return;
+        try {
+            await api.put(`/geladeira/${editItem.id}`, {
+                quantidade: parseInt(editQtd),
+                validade: editVal
+            });
+            setModalVisible(false);
+            fetchFridge();
+        } catch (error) {
+            Alert.alert("Erro", "Falha ao atualizar.");
+        }
+    };
+
+    // --- COMPONENTES VISUAIS ---
+
+    const renderHeader = () => (
+        <View style={styles.headerContainer}>
+            <View style={styles.titleRow}>
+                <Text style={styles.pageTitle}>Minha Geladeira</Text>
+                <TouchableOpacity onPress={fetchFridge}>
+                    <Ionicons name="reload" size={20} color="#D9682B" />
+                </TouchableOpacity>
+            </View>
+            
+            {/* CARD ADICIONAR */}
+            <View style={styles.addCard}>
+                <Text style={styles.cardTitle}>Adicionar Item</Text>
+                
+                {/* Input com Autocomplete */}
+                <View style={{ zIndex: 10 }}> 
+                    <Text style={styles.label}>Ingrediente</Text>
+                    <TextInput 
+                        style={styles.input} 
+                        placeholder="Digite para buscar..."
+                        value={searchQuery}
+                        onChangeText={handleSearchInput}
+                    />
+                    {showSuggestions && suggestions.length > 0 && (
+                        <View style={styles.suggestionsBox}>
+                            {suggestions.map(s => (
+                                <TouchableOpacity 
+                                    key={s.id} 
+                                    style={styles.suggestionItem}
+                                    onPress={() => selectSuggestion(s.nome)}
+                                >
+                                    <Text>{s.nome}</Text>
+                                </TouchableOpacity>
+                            ))}
+                        </View>
+                    )}
+                </View>
+
+                <View style={styles.row}>
+                    <View style={[styles.col, { flex: 0.3 }]}>
+                        <Text style={styles.label}>Qtd</Text>
+                        <TextInput 
+                            style={styles.input} 
+                            keyboardType="numeric"
+                            placeholder="1"
+                            value={quantity}
+                            onChangeText={setQuantity}
+                        />
+                    </View>
+                    <View style={[styles.col, { flex: 0.65 }]}>
+                        <Text style={styles.label}>Validade (AAAA-MM-DD)</Text>
+                        <TextInput 
+                            style={styles.input} 
+                            placeholder="Ex: 2025-12-30"
+                            value={validade}
+                            onChangeText={setValidade}
+                        />
+                    </View>
+                </View>
+
+                <TouchableOpacity style={styles.btnAdd} onPress={() => handleAddItem()}>
+                    <Text style={styles.btnAddText}>ADICIONAR À GELADEIRA</Text>
+                </TouchableOpacity>
+            </View>
+
+            {/* BÁSICOS */}
+            <View style={styles.basicsContainer}>
+                <Text style={styles.sectionHeaderTitle}>Itens Básicos (Toque para adicionar)</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingVertical: 10 }}>
+                    {BASIC_INGREDIENTS.map((item, idx) => (
+                        <TouchableOpacity 
+                            key={idx} 
+                            style={styles.chip}
+                            onPress={() => handleAddItem(item)}
+                        >
+                            <Text style={styles.chipText}>+ {item}</Text>
+                        </TouchableOpacity>
+                    ))}
+                </ScrollView>
+            </View>
+        </View>
     );
-  };
 
-  const handleAddSuccess = () => {
-    carregarIngredientes();
-    setShowAddModal(false);
-  };
+    const renderItem = ({ item }) => {
+        // Formatar data visualmente
+        let dataFormatada = '—';
+        let isVencido = false;
+        if (item.validade) {
+            const [ano, mes, dia] = item.validade.split('-');
+            dataFormatada = `${dia}/${mes}/${ano}`;
+            const dtVal = new Date(item.validade);
+            if (dtVal < new Date()) isVencido = true;
+        }
 
-  const handleEditSuccess = () => {
-    carregarIngredientes();
-    setShowEditModal(false);
-    setSelectedItem(null);
-  };
+        return (
+            <View style={styles.itemCard}>
+                <View style={{ flex: 1 }}>
+                    <Text style={styles.itemName}>{item.ingrediente}</Text>
+                    <View style={styles.itemMeta}>
+                        <Text style={styles.itemQtd}>Qtd: {item.quantidade}</Text>
+                        <View style={styles.validadeBox}>
+                            <Ionicons name="calendar-outline" size={12} color={isVencido ? '#D32F2F' : '#666'} />
+                            <Text style={[styles.itemDate, isVencido && { color: '#D32F2F', fontWeight: 'bold' }]}>
+                                {dataFormatada}
+                            </Text>
+                        </View>
+                    </View>
+                </View>
+                <View style={styles.actions}>
+                    <TouchableOpacity onPress={() => openEdit(item)} style={styles.actionBtn}>
+                        <Ionicons name="create-outline" size={22} color="#1976D2" />
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => handleDelete(item.id)} style={styles.actionBtn}>
+                        <Ionicons name="trash-outline" size={22} color="#D32F2F" />
+                    </TouchableOpacity>
+                </View>
+            </View>
+        );
+    };
 
-  // Renderização
-  const renderItem = ({ item }) => (
-    <IngredienteItem
-      item={item}
-      onEdit={handleEdit}
-      onDelete={handleDelete}
-    />
-  );
-
-  if (loading) {
     return (
-      <SafeAreaView style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#4a6fa5" />
-        <Text style={styles.loadingText}>Carregando sua geladeira...</Text>
-      </SafeAreaView>
-    );
-  }
-
-  return (
-    <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Minha Geladeira</Text>
-        <TouchableOpacity 
-          style={styles.addButton}
-          onPress={() => setShowAddModal(true)}
-        >
-          <Feather name="plus" size={24} color="#4a6fa5" />
-        </TouchableOpacity>
-      </View>
-
-      {/* Conteúdo principal */}
-      <FlatList
-        data={filteredIngredientes}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id.toString()}
-        ListHeaderComponent={
-          <>
-            {/* Banner */}
-            <BannerSection totalItems={ingredientes.length} />
-            
-            {/* Busca e Filtros */}
-            <SearchFilter
-              onSearch={handleSearch}
-              onFilter={handleFilter}
+        <View style={styles.container}>
+            <SectionList
+                sections={fridgeData}
+                keyExtractor={(item) => String(item.id)}
+                renderItem={renderItem}
+                renderSectionHeader={({ section: { title } }) => (
+                    <View style={styles.sectionHeader}>
+                        <Text style={styles.sectionTitleText}>{title}</Text>
+                    </View>
+                )}
+                ListHeaderComponent={renderHeader}
+                ListEmptyComponent={!loading && (
+                    <View style={styles.emptyState}>
+                        <Ionicons name="basket-outline" size={48} color="#CCC" />
+                        <Text style={{ color: '#999', marginTop: 10 }}>Sua geladeira está vazia.</Text>
+                    </View>
+                )}
+                contentContainerStyle={{ paddingBottom: 80 }}
             />
-            
-            {/* Card de adição rápida */}
-            {ingredientes.length === 0 && (
-              <QuickAddCard
-                onAdd={() => setShowAddModal(true)}
-                onSuccess={carregarIngredientes}
-              />
-            )}
-          </>
-        }
-        ListEmptyComponent={
-          <EmptyState
-            onAdd={() => setShowAddModal(true)}
-            isSearching={searchText !== '' || Object.values(filters).some(f => f !== 'all')}
-          />
-        }
-        ListFooterComponent={
-          <>
-            {/* Dicas (mostrar apenas se tiver itens) */}
-            {ingredientes.length > 0 && <TipsCard />}
-            
-            {/* Estatísticas */}
-            {ingredientes.length > 0 && (
-              <View style={styles.statsFooter}>
-                <Text style={styles.statsText}>
-                  {filteredIngredientes.length} de {ingredientes.length} itens
-                </Text>
-              </View>
-            )}
-          </>
-        }
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={handleRefresh}
-            colors={['#4a6fa5']}
-            tintColor="#4a6fa5"
-          />
-        }
-        contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
-      />
 
-      {/* Modais */}
-      <AddItemModal
-        visible={showAddModal}
-        onClose={() => setShowAddModal(false)}
-        onSuccess={handleAddSuccess}
-      />
-      
-      <EditItemModal
-        visible={showEditModal}
-        item={selectedItem}
-        onClose={() => {
-          setShowEditModal(false);
-          setSelectedItem(null);
-        }}
-        onSuccess={handleEditSuccess}
-      />
-    </SafeAreaView>
-  );
+            {loading && (
+                <View style={styles.loader}>
+                    <ActivityIndicator size="large" color="#D9682B" />
+                </View>
+            )}
+
+            {/* MODAL EDITAR */}
+            <Modal visible={modalVisible} transparent animationType="fade">
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalContent}>
+                        <Text style={styles.cardTitle}>Editar Item</Text>
+                        
+                        <Text style={styles.label}>Quantidade</Text>
+                        <TextInput 
+                            style={styles.input} 
+                            keyboardType="numeric" 
+                            value={editQtd} 
+                            onChangeText={setEditQtd} 
+                        />
+
+                        <Text style={styles.label}>Validade</Text>
+                        <TextInput 
+                            style={styles.input} 
+                            value={editVal} 
+                            onChangeText={setEditVal} 
+                        />
+
+                        <View style={styles.modalButtons}>
+                            <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.btnCancel}>
+                                <Text style={{ color: '#666' }}>Cancelar</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity onPress={saveEdit} style={styles.btnSave}>
+                                <Text style={{ color: '#FFF', fontWeight: 'bold' }}>Salvar</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
+        </View>
+    );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  centerContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f5f5f5',
-  },
-  loadingText: {
-    marginTop: 16,
-    fontSize: 16,
-    color: '#666',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 40,
-    paddingBottom: 16,
-    backgroundColor: '#D9682B',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e9ecef',
-    paddingBottom: 16,
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: 'rgba(255, 255, 255, 0.2)',
-  },
-  addButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#f0f7ff',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  listContent: {
-    paddingBottom: 20,
-  },
-  statsFooter: {
-    padding: 20,
-    alignItems: 'center',
-  },
-  statsText: {
-    fontSize: 14,
-    color: '#666',
-    fontStyle: 'italic',
-  },
+    container: { flex: 1, backgroundColor: '#F4F4F4' },
+    headerContainer: { padding: 20 },
+    titleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15 },
+    pageTitle: { fontSize: 28, fontWeight: 'bold', color: '#D9682B' },
+    
+    // Card Adicionar
+    addCard: { backgroundColor: '#FFF', padding: 15, borderRadius: 12, elevation: 3, marginBottom: 20 },
+    cardTitle: { fontSize: 18, fontWeight: '600', color: '#333', marginBottom: 10 },
+    label: { fontSize: 12, color: '#D9682B', fontWeight: 'bold', marginBottom: 4, textTransform: 'uppercase' },
+    input: { 
+        backgroundColor: '#F9F9F9', borderWidth: 1, borderColor: '#E0E0E0', 
+        borderRadius: 8, padding: 10, marginBottom: 10, fontSize: 16 
+    },
+    row: { flexDirection: 'row', justifyContent: 'space-between' },
+    col: { },
+    btnAdd: { 
+        backgroundColor: '#D9682B', padding: 12, borderRadius: 8, alignItems: 'center', marginTop: 5 
+    },
+    btnAddText: { color: '#FFF', fontWeight: 'bold' },
+
+    // Autocomplete
+    suggestionsBox: {
+        position: 'absolute', top: 65, left: 0, right: 0,
+        backgroundColor: '#FFF', borderWidth: 1, borderColor: '#DDD',
+        borderRadius: 8, zIndex: 100, maxHeight: 150
+    },
+    suggestionItem: { padding: 12, borderBottomWidth: 1, borderBottomColor: '#EEE' },
+
+    // Básicos
+    basicsContainer: { marginBottom: 10 },
+    sectionHeaderTitle: { fontSize: 14, fontWeight: 'bold', color: '#666' },
+    chip: {
+        backgroundColor: '#FFF', borderWidth: 1, borderColor: '#D9682B',
+        paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, marginRight: 8
+    },
+    chipText: { color: '#D9682B', fontWeight: '600', fontSize: 12 },
+
+    // Lista Items
+    sectionHeader: { backgroundColor: '#EEE', paddingVertical: 6, paddingHorizontal: 20 },
+    sectionTitleText: { fontSize: 12, fontWeight: 'bold', color: '#555', textTransform: 'uppercase' },
+    itemCard: {
+        flexDirection: 'row', backgroundColor: '#FFF', padding: 15,
+        marginHorizontal: 15, marginTop: 8, borderRadius: 8, elevation: 1
+    },
+    itemName: { fontSize: 16, fontWeight: '600', color: '#333' },
+    itemMeta: { flexDirection: 'row', marginTop: 5, alignItems: 'center' },
+    itemQtd: { fontSize: 12, backgroundColor: '#EEE', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, marginRight: 10 },
+    validadeBox: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+    itemDate: { fontSize: 12, color: '#666' },
+    actions: { flexDirection: 'row', alignItems: 'center' },
+    actionBtn: { padding: 5, marginLeft: 10 },
+
+    emptyState: { alignItems: 'center', padding: 40 },
+    loader: { position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.6)' },
+
+    // Modal
+    modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: 20 },
+    modalContent: { backgroundColor: '#FFF', padding: 20, borderRadius: 12 },
+    modalButtons: { flexDirection: 'row', justifyContent: 'flex-end', marginTop: 15, gap: 15 },
+    btnSave: { backgroundColor: '#D9682B', paddingHorizontal: 20, paddingVertical: 10, borderRadius: 8 },
+    btnCancel: { paddingVertical: 10 }
 });
