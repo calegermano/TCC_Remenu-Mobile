@@ -380,13 +380,72 @@ const styles = StyleSheet.create({
     recipeCal: { fontSize: 12, color: '#666' },
     removeBtn: { padding: 10 },
 
-    statsCard: { backgroundColor: '#fff', borderRadius: 12, padding: 20, marginTop: 20, marginBottom: 40, elevation: 2 },
-    statsTitle: { fontSize: 16, fontWeight: 'bold', color: '#333', marginBottom: 15, textAlign: 'center' },
-    statsRow: { flexDirection: 'row', justifyContent: 'space-around' },
-    statItem: { alignItems: 'center', width: '40%' },
-    statValue: { fontSize: 20, fontWeight: 'bold', color: '#D9682B' },
-    statLabel: { fontSize: 12, color: '#666' },
-    statDivider: { width: 1, backgroundColor: '#eee' },
+    statsCard: { backgroundColor: '#ffffff', 
+        borderRadius: 24, // Bordas bem arredondadas, estilo moderno
+        paddingVertical: 45,
+        paddingHorizontal: 20,
+        marginTop: 15, 
+        marginBottom: 100, // Margem grande para não bater na TabBar
+        
+        // Sombra estilo "Soft UI" / "Neumorphism" light
+        shadowColor: "#D9682B", // Sombra levemente alaranjada para dar brilho
+        shadowOffset: {
+            width: 0,
+            height: 8,
+        },
+        shadowOpacity: 0.15,
+        shadowRadius: 24,
+        elevation: 10, // Sombra forte no Android
+        
+        borderWidth: 1,
+        borderColor: '#f0f0f0', // Borda sutil para definição
+    },
+
+    statsTitle: { 
+        fontSize: 14, 
+        fontWeight: '700', 
+        color: '#1A1A1A', // Preto quase total para contraste
+        marginBottom: 25, 
+        textAlign: 'center',
+        textTransform: 'uppercase', // Caixa alta dá ar de "sistema"
+        letterSpacing: 1.5, // Espaçamento entre letras (muito usado em tech)
+    },
+
+    statsRow: { 
+        flexDirection: 'row', 
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        // O marginTop: 20 do segundo row já está inline no seu JSX, então não preciso por aqui
+    },
+
+    statItem: { 
+        flex: 1, 
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+
+    statValue: { 
+        fontSize: 32, // Aumentei bastante o número
+        fontWeight: '800', // Extra bold
+        color: '#D9682B', // Laranja da marca
+        marginBottom: 2,
+        includeFontPadding: false, // Remove espaçamento extra do Android
+        fontVariant: ['tabular-nums'], // Garante que números ocupem mesmo espaço (visual tech)
+    },
+
+    statLabel: { 
+        fontSize: 11, 
+        color: '#9E9E9E', // Cinza mais claro e moderno
+        fontWeight: '600',
+        textTransform: 'uppercase', // Label em caixa alta
+        letterSpacing: 0.5,
+    },
+
+    statDivider: { 
+        width: 1, 
+        height: 40, // Linha mais alta
+        backgroundColor: '#EEEEEE', // Divisor bem sutil
+    },
 
     modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
     modalContent: { backgroundColor: '#fff', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, maxHeight: '70%' },
