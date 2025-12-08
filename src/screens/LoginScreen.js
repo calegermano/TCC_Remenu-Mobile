@@ -12,7 +12,7 @@ import {
     TouchableOpacity,
     View
 } from 'react-native';
-import api from '../services/api';
+import api from '../services/api'; // Certifique-se que o caminho está certo
 
 export default function LoginScreen({ navigation }) {
     const [email, setEmail] = useState('');
@@ -24,37 +24,58 @@ export default function LoginScreen({ navigation }) {
 
         setLoading(true);
         try {
-            console.log("Tentando login com:", email); // Log 1
-            const response = await api.post('/login', { email, senha });
+            console.log("1. Enviando dados para login...");
             
-            // Log para ver o que o Laravel respondeu
-            console.log("RESPOSTA DO LARAVEL:", response.data); 
+            // --- CORREÇÃO 1: Mapear 'senha' para 'password' ---
+            // O Laravel geralmente espera 'password', não 'senha'
+            const response = await api.post('/login', { 
+                email: email, 
+                senha: senha 
+            });
+            
+            console.log("2. Resposta recebida:", response.status); 
 
-            // Adapte aqui conforme o que aparecer no console. 
-            // O padrão do Laravel Sanctum geralmente retorna 'token' ou 'access_token'
+            // Pega o token (suporta diferentes formatos de retorno)
             const token = response.data.token || response.data.access_token;
             const user = response.data.user;
 
             if (!token) {
                 Alert.alert("Erro", "O servidor não retornou um token válido.");
+                setLoading(false);
                 return;
             }
 
-            // Salvando com a mesma chave que o api.js busca (@remenu_token)
+            // --- CORREÇÃO 2: A SALVAÇÃO DO TOKEN ---
+            
+            // Passo A: Salva no armazenamento do celular
             await AsyncStorage.setItem('@remenu_token', token);
-            await AsyncStorage.setItem('@remenu_user', JSON.stringify(user));
+            if(user) {
+                await AsyncStorage.setItem('@remenu_user', JSON.stringify(user));
+            }
 
-            console.log("✅ Token salvo no celular:", token);
+            // Passo B: INJETA O TOKEN NO AXIOS IMEDIATAMENTE
+            // Isso garante que a próxima requisição (Geladeira) JÁ tenha o token
+            // sem depender do delay do interceptor.
+            api.defaults.headers.Authorization = `Bearer ${token}`;
 
-            // Reseta a navegação para ir para a Home/Fridge
+            console.log("3. Token salvo e cabeçalho configurado. Navegando...");
+
+            // Passo C: Navega somente agora
             navigation.reset({
                 index: 0,
-                routes: [{ name: 'Home' }], // Certifique-se que o nome da rota no App.js é 'Home'
+                routes: [{ name: 'Home' }], // Verifique se no seu App.js o nome é 'Home' ou 'Main'
             });
 
         } catch (error) {
-            console.log("Erro no Login:", error.response ? error.response.data : error);
-            Alert.alert('Erro', 'Login falhou. Verifique e-mail e senha.');
+            console.error("Erro no Login:", error);
+            if (error.response) {
+                console.log("Dados do erro:", error.response.data);
+                Alert.alert('Falha', error.response.data.message || 'Verifique suas credenciais.');
+            } else if (error.request) {
+                Alert.alert('Erro de Conexão', 'Não foi possível conectar ao servidor. Verifique o IP.');
+            } else {
+                Alert.alert('Erro', 'Ocorreu um erro inesperado.');
+            }
         } finally {
             setLoading(false);
         }
@@ -231,21 +252,20 @@ const styles = StyleSheet.create({
         letterSpacing: 1,
         textTransform: 'uppercase'
     },
-    // NOVOS ESTILOS DO BOTÃO VOLTAR
     backButton: {
         height: 56, 
         borderRadius: 12, 
         justifyContent: 'center', 
         alignItems: 'center',
-        backgroundColor: 'transparent', // Fundo transparente
-        borderWidth: 1.5, // Borda Laranja
+        backgroundColor: 'transparent',
+        borderWidth: 1.5,
         borderColor: '#D9682B', 
-        marginTop: 0 // Ajuste fino se necessário
+        marginTop: 0
     },
     backText: {
-        color: '#D9682B', // Texto Laranja
+        color: '#D9682B',
         fontSize: 16, 
-        fontWeight: 'bold', // Ou '600'
+        fontWeight: 'bold',
         letterSpacing: 1,
         textTransform: 'uppercase'
     }

@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
-
-// Verifique se o IP está correto!
+//ipconfig
+//Ip Carlos:192.168.15.104
 const api = axios.create({
     baseURL: 'http://192.168.15.104:8000/api', 
     headers: {
@@ -10,8 +10,6 @@ const api = axios.create({
     }
 });
 
-// --- O SEGREDO ESTÁ AQUI ---
-// Antes de cada requisição, esse código roda para injetar o Token
 api.interceptors.request.use(async (config) => {
     try {
         const token = await AsyncStorage.getItem('@remenu_token');
