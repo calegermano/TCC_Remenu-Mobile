@@ -38,9 +38,11 @@ function MainTabNavigator() {
           backgroundColor: '#FFFFFF',
           borderTopWidth: 1,
           borderTopColor: '#E5E5EA',
-          height: 60,
-          paddingBottom: 10,
-          paddingTop: 5,
+          
+         
+          height: 90,    
+          paddingBottom: 40, 
+          paddingTop: 10,   
         },
         tabBarLabelStyle: {
           fontSize: 12,
