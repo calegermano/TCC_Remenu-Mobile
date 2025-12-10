@@ -27,7 +27,7 @@ function MainTabNavigator() {
           } else if (route.name === 'Planejamento') {
             iconName = focused ? 'calendar' : 'calendar-outline';
           } else if (route.name === 'Geladeira') {
-            iconName = focused ? 'fridge' : 'fridge';
+            iconName = focused ? 'tablet-portrait-outline' : 'tablet-portrait-outline';
           }
 
           return <Ionicons name={iconName} size={size} color={color} />;

@@ -123,20 +123,24 @@ const styles = StyleSheet.create({
 
     // --- ESTILOS DO CABEÇALHO ---
     headerContainer: {
-        backgroundColor: '#fff',
-        paddingTop: 50, // Espaço para a barra de status
-        paddingBottom: 20,
-        paddingHorizontal: 20,
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        borderBottomWidth: 1,
-        borderBottomColor: '#F0F0F0',
-        elevation: 2, // Sombra leve no Android
-        shadowColor: '#000', // Sombra leve no iOS
-        shadowOpacity: 0.05,
-        shadowRadius: 10,
-        shadowOffset: { width: 0, height: 5 }
+    
+    backgroundColor: '#fff',
+    paddingTop: 50, // Espaço para barra de status
+    paddingBottom: 25,
+    paddingHorizontal: 25,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    
+    // Sombra suave
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
+    elevation: 4, 
+    shadowColor: '#D9682B', // Sombra levemente laranja
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    marginBottom: 10,
     },
     headerLabel: {
         fontSize: 12,
@@ -241,6 +245,6 @@ const styles = StyleSheet.create({
         marginTop: 10,
         color: '#999',
         fontSize: 14,
-        paddingHorizontal: 40
+        paddingHorizontal: 40,
     }
 });

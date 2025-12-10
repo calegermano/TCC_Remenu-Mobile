@@ -356,12 +356,19 @@ export default function PlanningScreen({ navigation }) {
 
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#f5f5f5' },
-    header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 15, backgroundColor: '#fff' },
+    header: { 
+        flexDirection: 'row', 
+        justifyContent: 'space-between', 
+        alignItems: 'center', 
+        padding: 15, 
+        backgroundColor: '#fff' 
+    
+    },
     monthTitle: { fontSize: 18, fontWeight: 'bold', color: '#D9682B', textTransform: 'capitalize' },
     
     weekStrip: { flexDirection: 'row', justifyContent: 'space-around', paddingVertical: 10, backgroundColor: '#fff', marginBottom: 10, elevation: 2 },
     dayItem: { alignItems: 'center', padding: 8, borderRadius: 10 },
-    dayItemSelected: { backgroundColor: '#D9682B' },
+    dayItemSelected: { backgroundColor: '#50D9B0' },
     dayName: { fontSize: 12, color: '#666', textTransform: 'uppercase' },
     dayNum: { fontSize: 16, fontWeight: 'bold', color: '#333' },
     dayTextSelected: { color: '#fff' },
@@ -371,7 +378,7 @@ const styles = StyleSheet.create({
 
     slot: { flexDirection: 'row', alignItems: 'center', padding: 15, borderRadius: 12, marginBottom: 10, minHeight: 80 },
     slotEmpty: { backgroundColor: '#fff', borderStyle: 'dashed', borderWidth: 1, borderColor: '#ccc' },
-    slotFilled: { backgroundColor: '#e8f5e9', borderLeftWidth: 5, borderLeftColor: '#4caf50', elevation: 1 },
+    slotFilled: { backgroundColor: '#e3fff7ff', borderLeftWidth: 5, borderLeftColor: '#50D9B0', elevation: 1 },
     
     slotType: { fontSize: 12, color: '#666', marginBottom: 4, textTransform: 'uppercase' },
     addIcon: { position: 'absolute', right: 15 },

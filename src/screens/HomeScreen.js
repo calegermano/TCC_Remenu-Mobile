@@ -88,7 +88,7 @@ export default function HomeScreen({ navigation }) {
                 {/* === SEÇÃO 1: BANNER HERO (Mantido) === */}
                 <View style={styles.heroSection}>
                     <Text style={styles.heroTitle}>
-                        TRANSFORME SEUS <Text style={styles.highlight}>INGREDIENTES.</Text>
+                        TRANSFORME SEUS <Text style={styles.highlight}>INGREDIENTES</Text>
                     </Text>
                     <Text style={styles.heroSubtitle}>
                         Receitas inteligentes com o que você já tem em casa.
@@ -243,7 +243,7 @@ const styles = StyleSheet.create({
     heroImageContainer: { width: '100%', height: 200, borderRadius: 20, overflow: 'hidden', marginBottom: 20, elevation: 8, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 8 },
     heroImage: { width: '100%', height: '100%', resizeMode: 'cover' },
     imageOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.05)' },
-    primaryButton: { flexDirection: 'row', height: 56, backgroundColor: '#D9682B', borderRadius: 12, justifyContent: 'center', alignItems: 'center', gap: 10, shadowColor: '#D9682B', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 10, elevation: 5 },
+    primaryButton: { flexDirection: 'row', height: 56, backgroundColor: '#50D9B0', borderRadius: 12, justifyContent: 'center', alignItems: 'center', gap: 10, shadowColor: '#50D9B0', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 10, elevation: 5 },
     primaryButtonText: { color: '#FFF', fontSize: 16, fontWeight: 'bold', letterSpacing: 1 },
 
     // --- HEADERS ---

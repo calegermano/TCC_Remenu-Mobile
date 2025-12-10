@@ -302,10 +302,28 @@ export default function RecipesScreen({ navigation }) {
 
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#f5f5f5' },
-    header: { flexDirection: 'row', padding: 15, backgroundColor: '#fff', elevation: 2, alignItems: 'center' },
+    header: { 
+    backgroundColor: '#fff',
+    paddingTop: 30, // Espaço para barra de status
+    paddingBottom: 25,
+    paddingHorizontal: 25,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    
+    // Sombra suave
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
+    elevation: 4, 
+    shadowColor: '#D9682B', // Sombra levemente laranja
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    marginBottom: 10,
+    },
     searchContainer: { flex: 1, flexDirection: 'row', backgroundColor: '#f0f0f0', borderRadius: 8, paddingHorizontal: 10, alignItems: 'center', height: 45 },
     input: { flex: 1, height: '100%' },
-    filterButton: { marginLeft: 10, backgroundColor: '#D9682B', padding: 10, borderRadius: 8 },
+    filterButton: { marginLeft: 10, backgroundColor: '#50D9B0', padding: 10, borderRadius: 8 },
     
     // Card
     card: { backgroundColor: '#fff', borderRadius: 12, marginBottom: 15, overflow: 'hidden', elevation: 3 },
